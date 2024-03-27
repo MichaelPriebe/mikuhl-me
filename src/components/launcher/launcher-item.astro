@@ -116,7 +116,8 @@ const { name, fill, background, path, scale, links }: Props = Astro.props;
     };
 
     onPointerMove = (event: PointerEvent) => {
-      this.isClick = false;
+      if (Math.abs(event.movementX) > 1 || Math.abs(event.movementY) > 1)
+        this.isClick = false;
     };
 
     onPointerUp = (event: PointerEvent) => {

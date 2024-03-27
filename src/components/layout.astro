@@ -2,6 +2,8 @@
 interface Props {
   title: string;
   type?: string;
+  emoji?: string;
+  favicon?: string;
   image?: string;
   url?: string;
   description?: string;
@@ -10,6 +12,8 @@ interface Props {
 const {
   title,
   type = "website",
+  emoji,
+  favicon = "/favicon.svg",
   image = "https://mikuhl.me/ogimage.png",
   url,
   description,
@@ -20,18 +24,39 @@ const {
   <head>
     <meta charset="UTF-8" />
 
-    <link rel="icon" type="image/svg" href="/favicon.svg" />
+    {
+      emoji ? (
+        <link
+          rel="icon"
+          href={`data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><text y="1em" font-size="16">${emoji}</text></svg>`}
+        />
+      ) : (
+        <link rel="icon" href={favicon} />
+      )
+    }
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
 
+    <title>{title}</title>
     <meta property="og:title" content={title} />
+    <meta property="twitter:title" content={title} />
     <meta property="og:type" content={type} />
     <meta property="og:image" content={image} />
+    <meta property="twitter:image" content={image} />
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:site:id" content="1444685881" />
+    <meta property="twitter:creator:id" content="1444685881" />
     {url && <meta property="og:url" content={url} />}
-    {description && <meta property="og:description" content={description} />}
-
-    <title>{title}</title>
+    {
+      description && (
+        <>
+          <meta property="description" content={description} />
+          <meta property="og:description" content={description} />
+          <meta property="twitter:description" content={description} />
+        </>
+      )
+    }
   </head>
   <body>
     <slot />

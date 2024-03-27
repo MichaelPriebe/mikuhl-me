@@ -1,0 +1,91 @@
+---
+import { eq } from "drizzle-orm";
+import LauncherItem, {
+  type LauncherItemProps,
+} from "../components/launcher/launcher-item.astro";
+import Launcher from "../components/launcher/launcher.astro";
+import Layout from "../components/layout.astro";
+import PhysicsWorld from "../components/physics/physics-world.astro";
+import { db } from "../db";
+import { links, publicLinkEntries, publicLinks } from "../schema";
+
+export const prerender = false;
+
+const items = await db
+  .select({
+    id: publicLinks.id,
+    name: publicLinks.name,
+    fill: publicLinks.fill,
+    background: publicLinks.background,
+    path: publicLinks.path,
+    clicks: links.clicks,
+    slug: links.slug,
+    title: publicLinkEntries.title,
+    subtitle: publicLinkEntries.subtitle,
+  })
+  .from(publicLinks)
+  .leftJoin(publicLinkEntries, eq(publicLinkEntries.linkId, publicLinks.id))
+  .leftJoin(links, eq(publicLinkEntries.slug, links.slug))
+  .all()
+  .then((rows) => {
+    let totalClicks = 0;
+
+    const items = Object.values(
+      rows.reduce(
+        (items, row) => {
+          const item = (items[row.id] = items[row.id] || {
+            name: row.name,
+            fill: row.fill,
+            background: row.background,
+            path: row.path,
+            scale: 1,
+            links: [],
+          });
+
+          const clicks = row.clicks || 0;
+          totalClicks += clicks;
+          item.scale += clicks;
+
+          if (row.slug && row.title && row.subtitle)
+            item.links.push({
+              url: "/link/" + row.slug,
+              title: row.title,
+              subtitle: row.subtitle,
+            });
+
+          return items;
+        },
+        {} as Record<number, LauncherItemProps>,
+      ),
+    );
+    // Adjust scale based off total clicks.
+    if (totalClicks > 0)
+      items.forEach(
+        (item) => (item.scale = ((item.scale - 1) / totalClicks) * 4 + 1),
+      );
+    return items;
+  });
+---
+
+<Layout title="mikuhl" url="https://mikuhl.me">
+  <div class="fixed inset-0 flex flex-col">
+    <header
+      class="sticky top-0 flex h-16 flex-row items-center justify-center border-b p-2"
+    >
+      <div class="flex w-full max-w-screen-sm flex-row">
+        <h1 class="text-xl">mikuhl.me</h1>
+      </div>
+    </header>
+    <main class="flex grow">
+      <PhysicsWorld>
+        <div class="flex size-full justify-center">
+          <div class="size-full max-w-screen-sm p-2">
+            <Launcher>
+              {items.map((item) => <LauncherItem {...item} />)}
+            </Launcher>
+          </div>
+        </div>
+      </PhysicsWorld>
+    </main>
+  </div>
+</Layout>

@@ -1,0 +1,29 @@
+---
+import { eq, sql } from "drizzle-orm";
+import { db } from "../../db";
+import { links } from "../../schema";
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+
+if (slug != undefined) {
+  const rows = await db
+    .update(links)
+    .set({
+      clicks: sql`${links.clicks} + 1`,
+    })
+    .where(eq(links.slug, slug))
+    .returning({
+      url: links.url,
+    });
+
+  const url = rows[0]?.url;
+
+  if (url != undefined) {
+    return Astro.redirect(url);
+  }
+}
+
+return Astro.redirect("/404");
+---

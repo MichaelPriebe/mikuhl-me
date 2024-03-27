@@ -1,0 +1,56 @@
+---
+interface Props {
+  title: string;
+  type?: string;
+  image?: string;
+  url?: string;
+  description?: string;
+}
+
+const {
+  title,
+  type = "website",
+  image = "https://mikuhl.me/ogimage.png",
+  url,
+  description,
+}: Props = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <link rel="icon" type="image/svg" href="/favicon.svg" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+
+    <meta property="og:title" content={title} />
+    <meta property="og:type" content={type} />
+    <meta property="og:image" content={image} />
+    {url && <meta property="og:url" content={url} />}
+    {description && <meta property="og:description" content={description} />}
+
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --theme-hue: 290;
+
+    --color-background: oklch(20% 0.05 var(--theme-hue));
+    --color-surface: oklch(30% 0.05 var(--theme-hue));
+    --color-secondary: oklch(40% 0.05 var(--theme-hue));
+    --color-primary: oklch(50% 0.2 var(--theme-hue));
+    --color-foreground: oklch(90% 0.05 var(--theme-hue));
+
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: sans-serif;
+    accent-color: var(--color-primary);
+  }
+</style>

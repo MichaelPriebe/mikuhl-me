@@ -1,0 +1,134 @@
+---
+import Button from "../button.astro";
+import Card from "../card.astro";
+import PhysicsBody from "../physics/physics-body.astro";
+
+interface Props {
+  name: string;
+  fill: string;
+  background: string;
+  path: string;
+  scale: number;
+  links: {
+    url: string;
+    title: string;
+    subtitle: string;
+  }[];
+}
+
+export type LauncherItemProps = Props;
+
+const { name, fill, background, path, scale, links }: Props = Astro.props;
+---
+
+<launcher-item class="flex flex-col items-center justify-center gap-2">
+  <PhysicsBody>
+    <a
+      data-launcher-item-icon
+      data-scale={scale}
+      class="block size-16 rounded-lg p-2 data-[physics]:cursor-grab data-[physics]:active:cursor-grabbing"
+      style={{ background }}
+      aria-label={name}
+      href={links[0]?.url}
+    >
+      <svg viewBox="0 0 32 32">
+        <path fill={fill} d={path}></path>
+      </svg>
+    </a>
+  </PhysicsBody>
+  <noscript>
+    <p>{name}</p>
+  </noscript>
+  <dialog
+    data-launcher-item-dialog
+    class="w-full max-w-screen-sm bg-transparent p-2 text-foreground backdrop:bg-black backdrop:bg-opacity-50"
+  >
+    <Card>
+      <div class="flex w-full flex-col divide-y">
+        <h1 class="p-2 text-xl">{name}</h1>
+        {
+          links.map((link) => (
+            <a
+              class="flex w-full flex-col p-2 hover:bg-secondary focus:bg-secondary"
+              href={link.url}
+            >
+              <p>{link.title}</p>
+              <p>{link.subtitle}</p>
+            </a>
+          ))
+        }
+        <div class="flex flex-row justify-end p-2">
+          <Button data-launcher-item-dialog-close-button variant="outlined">
+            Close
+          </Button>
+        </div>
+      </div>
+    </Card>
+  </dialog>
+</launcher-item>
+
+<script>
+  class LauncherItem extends HTMLElement {
+    icon!: HTMLAnchorElement;
+    dialog!: HTMLDialogElement;
+    closeButton!: HTMLButtonElement;
+
+    connectedCallback() {
+      const icon = (this.icon = this.querySelector(
+        "[data-launcher-item-icon]",
+      )!);
+      const dialog = (this.dialog = this.querySelector(
+        "[data-launcher-item-dialog]",
+      )!);
+      const closeButton = (this.closeButton = this.querySelector(
+        "[data-launcher-item-dialog-close-button]",
+      )!);
+
+      const scale = icon.getAttribute("data-scale")!;
+      const style = icon.style;
+      style.width = `calc(4rem * ${scale})`;
+      style.height = `calc(4rem * ${scale})`;
+
+      icon.setAttribute("data-physics", "");
+      icon.setAttribute("draggable", "false");
+
+      icon.addEventListener("click", this.onClick);
+      icon.addEventListener("pointerdown", this.onPointerDown);
+      icon.addEventListener("pointermove", this.onPointerMove);
+      icon.addEventListener("pointerup", this.onPointerUp);
+
+      // Matter.js prevents clicking on elements inside the mouse constraint.
+      // Move this element elsewhere.
+      document.body.appendChild(dialog);
+
+      closeButton.addEventListener("click", this.onClose);
+    }
+
+    isClick = false;
+
+    onClick = (event: MouseEvent) => {
+      event.preventDefault();
+      if (event.detail == 0) this.dialog.showModal();
+    };
+
+    onPointerDown = (event: PointerEvent) => {
+      this.isClick = true;
+    };
+
+    onPointerMove = (event: PointerEvent) => {
+      this.isClick = false;
+    };
+
+    onPointerUp = (event: PointerEvent) => {
+      if (this.isClick) {
+        this.isClick = false;
+        this.dialog.showModal();
+      }
+    };
+
+    onClose = (event: MouseEvent) => {
+      this.dialog.close();
+    };
+  }
+  customElements.define("launcher-item", LauncherItem);
+</script>

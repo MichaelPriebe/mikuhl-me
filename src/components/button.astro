@@ -1,0 +1,22 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+interface Props extends HTMLAttributes<"button"> {
+  variant?: "primary" | "secondary" | "outlined" | "text";
+}
+
+const { class: clazz, variant = "primary", ...props }: Props = Astro.props;
+---
+
+<button
+  {...props}
+  class:list={[
+    "flex min-h-12 min-w-12 select-none flex-row items-center justify-center rounded-lg px-4 hover:opacity-90 active:opacity-80 disabled:opacity-50",
+    variant == "primary" && "bg-primary",
+    variant == "secondary" && "bg-secondary",
+    variant == "outlined" && "border",
+    clazz,
+  ]}
+>
+  <slot />
+</button>
